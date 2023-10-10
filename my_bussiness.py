@@ -1,6 +1,10 @@
+import time
+
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import use
+use('TkAgg')
 from collections import Counter
 log = False
 def get_neighbor_opinion_distribution(G, node, exclude = None):
@@ -188,68 +192,68 @@ class Simulation:
 def draw(G):
     nx.draw(G, with_labels= True, node_color=list(nx.get_node_attributes(G, "opinion").values()))
 
-N = 300
-avg_degree = 10
-num_opinions = 8
-
-def run_with_params(p, phi):
-    simul = Simulation(N=N, avg_degree=avg_degree, p=p, phi=phi, num_opinions=num_opinions)
-    simul.run()
-    i=1
-    while simul.status == -1 and i < 5:
+def contour_plot_number_of_surviving_opinions(N=100, runs=5, avg_degree=10, num_opinions=4, p_count=20, phi_count=20, phi_init=0.2):
+    def mean(func, *args):
+        sum = 0
+        count = 0
+        for i in range(runs):
+            res = func(*args)
+            if res >= 0:
+                sum += res
+                count += 1
+        return sum/count if count > 0 else -1
+    def run_with_params(p, phi):
         simul = Simulation(N=N, avg_degree=avg_degree, p=p, phi=phi, num_opinions=num_opinions)
         simul.run()
-        i+=1
-    if simul.status == 1:
-        return simul.num_surviving_opinions
-    else:
-        return -1
-
-runs = 5
-q = ""
-def mean( *args):
-    sum = 0
-    count = 0
-    for i in range(runs):
-        res = run_with_params(*args)
-        if res >= 0:
-            sum += res
-            count += 1
-    q.put(sum/count if count > 0 else -1)
-    return sum/count if count > 0 else -1
-
-def contour_plot_number_of_surviving_opinions(N=100, runs=5, avg_degree=10, num_opinions=4, p_count=20, phi_count=20, phi_init=0.2):
-    global q
-
+        i=1
+        while simul.status == -1 and i < 5:
+            simul = Simulation(N=N, avg_degree=avg_degree, p=p, phi=phi, num_opinions=num_opinions)
+            simul.run()
+            i+=1
+        if simul.status == 1:
+            return simul.num_surviving_opinions
+        else:
+            return -1
     p_range = np.linspace(0, 1, p_count)
     phi_range = np.linspace(phi_init, 1, phi_count)
     P, PHI = np.meshgrid(p_range, phi_range)
     params = np.dstack((P, PHI)).reshape(-1,2)
-    import multiprocessing as mp
-    from multiprocessing import freeze_support
-    ctx = mp.get_context("spawn")
-    q = ctx.Queue()
-    freeze_support()
+    # split params in 8 parts and run each part in a different process
+    import os
+    n = 0
+    pid = -1
+    pids = []
+    for n in range(0,8):
+        if pid == 0:
+            break
+        pid = os.fork()
+        print("iteration n",n )
+        pids.insert(0, pid)
+        if pid == 0:
+            n = n
 
 
+    print("pid: ", pid, "n: ", n)
 
-
-
-    p = ctx.Process(target=mean, args=params)
-    res = []
-    p.run()
-    print(q.get())
-    p.join()
-
-
+    params = params[n*len(params)//8:(n+1)*len(params)//8]
+    res = [
+        mean(run_with_params, p,
+                phi #phi
+                )
+   #     if (id * len(params) // 8) < n < ((id + 1) * len(params) // 8) else 0
+        for p, phi in params
+    ]
     surviving_opinions = np.array(res)
-    # save array to file
-    #np.save('surviving_opinions_{}'.format(id), surviving_opinions)
+    np.save('surviving_opinions_{}'.format(n), surviving_opinions)
 
     # wait for all children to exit
 
+    if pid == 0:
+        exit(0)
+    os.wait()
+
     # read each file and merge the arrays
-    # surviving_opinions = np.concatenate([np.load('surviving_opinions_{}.npy'.format(n)) for n in range(8)])
+    surviving_opinions = np.concatenate([np.load('surviving_opinions_{}.npy'.format(n)) for n in range(8)])
     Z = surviving_opinions.reshape(PHI.shape)
 
     # return Z to the parent process
@@ -257,22 +261,7 @@ def contour_plot_number_of_surviving_opinions(N=100, runs=5, avg_degree=10, num_
     plt.colorbar(contour).ax.invert_yaxis()
     plt.ylabel('Φ')
     plt.xlabel('p')
+    plt.show()
+    print("HERE")
 
 
-def get_rank_distribution(G, normalized=True):
-    rank_sequence = list(nx.get_node_attributes(G, 'opinion').values())  # rank sequence
-    rankCount = Counter(rank_sequence).most_common()
-    aux_y = [c for o,c in rankCount]
-    aux_x = list(range(1, len(aux_y)+1))
-
-    n_nodes = G.number_of_nodes()
-    if normalized:
-        for i in range(len(aux_y)):
-            aux_y[i] = aux_y[i]/n_nodes
-    return aux_x, aux_y
-
-def plot_rank_distribution(G, normalized=True):
-    aux_x, aux_y= get_rank_distribution(G, normalized=True)
-    plt.xscale("log")
-    plt.yscale("log")
-    plt.plot(aux_x, aux_y, '-o')

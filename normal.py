@@ -60,22 +60,19 @@ def jupyter_flow():
     print(time.time() - tstart )
 
     profiler.disable()
-    profiler.dump_stats('profile_data.prof')
+    profiler.dump_stats('profile_data.prof')#jupyter_flow()
 
+#import cProfile
+#profiler = cProfile.Profile()
+#profiler.enable()
+#import time
+tstart = time.time()
+contour_plot_number_of_surviving_opinions(N=800, p_count=50, phi_count=40, phi_init=0.2, num_opinions=30, runs=50)
+#contour_plot_number_of_surviving_opinions(N=55, p_count=10, phi_count=5, num_opinions=8)
+print(time.time() - tstart )
 
-    exit()
-    # o objetivo seria este. Mas não sei se vai ser possível
-    contour_plot_number_of_surviving_opinions(N=1000, p_count=100, phi_count=100, phi_init=0, num_opinions=50, runs=100)
-    # mais rápido de obter se não conseguirmos correr o de cima
-    contour_plot_number_of_surviving_opinions(N=800, p_count=50, phi_count=40, phi_init=0.2, num_opinions=30, runs=50)
-
-    simul = Simulation(N=998, avg_degree=10, num_opinions=8, phi=0.6, p=0.8)
-    #plot_rank_distribution(simul.graph, normalized=True)
-    #plot_rank_distribution(simul.graph, normalized=True)
-
-#jupyter_flow()
-
-contour_plot_number_of_surviving_opinions(N=300, p_count=10, phi_count=5, num_opinions=8)
+#profiler.disable()
+#profiler.dump_stats('profile_data.prof')#jupyter_flow()
 #from multiprocessing import freeze_support, Process
 #freeze_support()
 #if __name__ == '__main__':
