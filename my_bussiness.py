@@ -87,6 +87,7 @@ def rewire(G, node, phi):
         print('MA for node {} -> rule:{}, neigh_removed:{}, neigh_added:{}'
               .format(node, rule, neigh_remove, neigh_add))
     return 0
+
 class Simulation:
     def __init__(self, N=15, avg_degree=5, p=0.5, phi=0.5, num_opinions=3):
         self.N = N
@@ -98,15 +99,18 @@ class Simulation:
         self.num_surviving_opinions = 0
         self.stall = 0
         self.stall_bin = {}
-        self.graph = nx.gnp_random_graph(N, avg_degree/N)
         self.status = 0
+        self.init_graph()
+    def init_graph(self):
+        self.graph = nx.gnp_random_graph(self.N, self.k/self.N)
         # Guarantee initial graph is connected
         i = 0
         while(not nx.is_connected(self.graph)):
             if i == 5:
                 self.status = -1
+                print("Couldn't generate connected graph. Consider increasing the average degree.")
             else:
-                self.graph = nx.gnp_random_graph(N, avg_degree/N)
+                self.graph = nx.gnp_random_graph(self.N, self.k/self.N)
                 i += 1
         self.init_opinions()
     def init_opinions(self):
@@ -116,6 +120,11 @@ class Simulation:
         """
         opinions = {i: 1+np.random.choice(self.G) for i in range(self.N)}
         nx.set_node_attributes(self.graph, opinions, 'opinion')
+    def reset(self):
+        self.time = 0
+        self.stall = 0
+        self.stall_bin = {}
+        self.status = 0
     def step(self):
         """
         One step of the simulation. Application of one of the rules (MA or MP) to a single node.
@@ -180,12 +189,31 @@ class Simulation:
             self.step()
             self.step()
             self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
             if self.loop_condition():
                 self.status = -1
                 return -1
         self.status = 1
         self.num_surviving_opinions = len(set(nx.get_node_attributes(self.graph, "opinion").values()))
         return 1
+    def run_retry(self, limit=5):
+        self.run()
+        i=1
+        while self.status == -1 and i < limit:
+            self.reset()
+            self.init_graph()
+            self.run()
+            i+=1
+        return self.status
+
 
 
 ####################### PLOTS #################################
@@ -204,16 +232,9 @@ def contour_plot_number_of_surviving_opinions(N=100, runs=5, avg_degree=10, num_
         return sum/count if count > 0 else -1
     def run_with_params(p, phi):
         simul = Simulation(N=N, avg_degree=avg_degree, p=p, phi=phi, num_opinions=num_opinions)
-        simul.run()
-        i=1
-        while simul.status == -1 and i < 5:
-            simul = Simulation(N=N, avg_degree=avg_degree, p=p, phi=phi, num_opinions=num_opinions)
-            simul.run()
-            i+=1
+        simul.run_retry()
         if simul.status == 1:
             return simul.num_surviving_opinions
-        else:
-            return -1
     p_range = np.linspace(0, 1, p_count)
     phi_range = np.linspace(phi_init, 1, phi_count)
     P, PHI = np.meshgrid(p_range, phi_range)
