@@ -189,7 +189,7 @@ class Simulation:
                     self.stall += 1
                     return
             first_node = node 
-            stall_code = self.rewire(self.graph, node, ma_rule) 
+            stall_code = self.rewire(node, ma_rule) 
             while stall_code:
                 # keep looping through the nodes until you find one that you can apply rewire to
                 # or you get back to the initial node. Notice it's still random because the first node
@@ -201,7 +201,7 @@ class Simulation:
                     self.stall += 1
                     self.prev = (0, ma_rule)
                     return
-                stall_code = self.rewire(self.graph, node, ma_rule) 
+                stall_code = self.rewire(node, ma_rule) 
             self.time += 1
             self.prev = (1, ma_rule)
     def convergence_condition(self):
