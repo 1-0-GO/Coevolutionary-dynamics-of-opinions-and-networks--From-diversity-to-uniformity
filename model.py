@@ -2,17 +2,7 @@ import networkx as nx
 import numpy as np
 
 def generate_random_regular_graph(simul):
-    graph = nx.random_regular_graph(simul.k, simul.N)
-    # Guarantee initial graph is connected
-    i = 0
-    while(not nx.is_connected(graph)):
-        if i == 5:
-            return None
-            print("Couldn't generate connected graph. Consider increasing the average degree.")
-        else:   
-            graph = nx.gnp_random_graph(simul.N, simul.k/simul.N)
-            i += 1
-    return graph
+    return nx.random_regular_graph(simul.k, simul.N)
 
 def get_neighbor_opinion_distribution(G, node, exclude = None):
     """
@@ -106,7 +96,7 @@ class Simulation:
         neigh_remove = np.random.choice(candidate_removal_nodes)
         neigh_add = None
         # rewire to neighbor of neighbors with same opinion
-        if rule == 1:
+        if rule:
             neighbor_of_neighbors = { neigh_of_neigh 
                                     for neigh in nx.neighbors(self.graph, node) 
                                     for neigh_of_neigh in nx.neighbors(self.graph, neigh) 
@@ -118,7 +108,7 @@ class Simulation:
                 return 3
             neigh_add = np.random.choice(np.fromiter(neighbor_of_neighbors, int, len(neighbor_of_neighbors))) 
         # rewire to any non-neighboring node in the network with same opinion
-        elif rule == 0:
+        else:
             candidates = { other_node 
                         for other_node in nx.nodes(self.graph)
                         if self.graph.nodes[other_node]['opinion'] == node_opinion
@@ -147,7 +137,7 @@ class Simulation:
         stall_code = 0
 
         # rule==1 -> Apply majority preference rule to node
-        if rule == 1:
+        if rule:
             # if prev was (failed, MP), we have converged so no need to do anything
             if self.prev == (0, -1):
                 return
@@ -230,6 +220,14 @@ class Simulation:
         if self.status:
             return self.status
         while(not (self.convergence_condition() or self.halt_condition())):
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
+            self.step()
             self.step()
             self.step()
             self.step()
