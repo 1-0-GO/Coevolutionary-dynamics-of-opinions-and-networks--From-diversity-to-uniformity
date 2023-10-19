@@ -214,6 +214,7 @@ class Simulation:
             max_opinion_count = max(count.values())
             s = list(count.values())
             s.sort(reverse=True)
+            if len(s) == 1: return True
             if s[0] == s[1]: return False
             return count.get(self.graph.nodes[node]['opinion'], 0) == max_opinion_count
         return all(
