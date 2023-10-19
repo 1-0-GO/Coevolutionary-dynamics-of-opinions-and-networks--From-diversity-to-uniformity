@@ -212,7 +212,8 @@ class Simulation:
         def agrees_with_majority(node):
             count = get_neighbor_opinion_distribution(self.graph, node)
             max_opinion_count = max(count.values())
-            s = list(count.values()).sort(reverse=True)
+            s = list(count.values())
+            s.sort(reverse=True)
             if s[0] == s[1]: return False
             return count.get(self.graph.nodes[node]['opinion'], 0) == max_opinion_count
         return all(
