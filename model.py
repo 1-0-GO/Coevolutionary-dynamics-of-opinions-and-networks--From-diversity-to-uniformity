@@ -231,7 +231,8 @@ class Simulation:
     def run(self):
         if self.status:
             return self.status
-        while(not (self.convergence_condition() or self.halt_condition())):
+        while(not (self.convergence_condition() )):
+
             self.step()
             self.step()
             self.step()
