@@ -205,8 +205,10 @@ class Simulation:
         """
         def agrees_with_majority(node):
             count = get_neighbor_opinion_distribution(self.graph, node)
+            l = count.most_common()
             max_opinion_count = max(count.values()) 
-            return count.get(self.graph.nodes[node]['opinion'], 0) == max_opinion_count 
+            return count.get(self.graph.nodes[node]['opinion'], 0) == max_opinion_count and (l[0][1]!= l[1][1] # check that there is indeed an majority
+                                                                                             )
         return all(
                 agrees_with_majority(node)
                 for node in nx.nodes(self.graph)
