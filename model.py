@@ -86,6 +86,8 @@ class Simulation:
         if not count:
             return 1
         min_opinion_count = min(count.values()) 
+        #sorted_opinions = count.values().sort()
+        #if(min1[0] == min2[0]) return 2 #?
         candidate_removal_nodes = [ neigh for neigh in nx.neighbors(self.graph, node) if 
                                     self.graph.nodes[neigh]['opinion'] != node_opinion and
                                     count[self.graph.nodes[neigh]['opinion']] == min_opinion_count and
@@ -135,6 +137,7 @@ class Simulation:
         # choose a random node to apply the rule to
         node = np.random.choice(nx.nodes(self.graph))
         stall_code = 0
+        self.time += 1
 
         # rule==1 -> Apply majority preference rule to node
         if rule:
@@ -148,11 +151,11 @@ class Simulation:
             while not change:
                 if node_prev_opinion != maj_opinion:
                     self.graph.nodes[node]['opinion'] = maj_opinion
-                    self.time += 1
                     # set prev to (successful, MP)
                     self.prev = (1, -1)
                     change = True
                 else:
+                    return 
                     node += 1
                     if node == self.N:
                         node = 0
@@ -169,14 +172,14 @@ class Simulation:
         else: 
             ma_rule = np.random.binomial(1, self.phi)
             # if the previous operation was unsuccessful (note it has to have been an MA)
-            if self.prev[0] == 0:
+            #if self.prev[0] == 0:
                 # if [we are applying MA with neighbor of neighbors (1)] or 
                 # [are applying MA with all (0) and the previous was MA with all
                 # or MP, and they failed] then nothing to be done, the network didn't
                 # change and we are trying to do the same thing again, or in the case
                 # of MP failing, it means we have converged already
-                if ma_rule == 1 or (ma_rule == 0 and self.prev[1] != 1):
-                    self.stall += 1
+            #    if ma_rule == 1 or (ma_rule == 0 and self.prev[1] != 1):
+            #        self.stall += 1
                     return
             first_node = node 
             stall_code = self.rewire(node, ma_rule) 
@@ -184,7 +187,9 @@ class Simulation:
                 # keep looping through the nodes until you find one that you can apply rewire to
                 # or you get back to the initial node. Notice it's still random because the first node
                 # was selected randomly
+                return
                 node += 1
+                self.time += 1
                 if node == self.N:
                     node = 0
                 if node == first_node:
@@ -192,7 +197,6 @@ class Simulation:
                     self.prev = (0, ma_rule)
                     return
                 stall_code = self.rewire(node, ma_rule) 
-            self.time += 1
             self.prev = (1, ma_rule)
     def convergence_condition(self):
         """
@@ -201,8 +205,10 @@ class Simulation:
         """
         def agrees_with_majority(node):
             count = get_neighbor_opinion_distribution(self.graph, node)
+            l = count.most_common()
             max_opinion_count = max(count.values()) 
-            return count.get(self.graph.nodes[node]['opinion'], 0) == max_opinion_count
+            return count.get(self.graph.nodes[node]['opinion'], 0) == max_opinion_count and (l[0][1]!= l[1][1] # check that there is indeed an majority
+                                                                                             )
         return all(
                 agrees_with_majority(node)
                 for node in nx.nodes(self.graph)
