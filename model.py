@@ -1,5 +1,8 @@
+from functools import lru_cache
+
 import networkx as nx
 import numpy as np
+from cache2 import cached_function
 
 def generate_random_regular_graph(simul):
     graph = nx.random_regular_graph(simul.k, simul.N)
@@ -41,10 +44,10 @@ def get_majority_opinion(G, node):
         if c > max_count:
             maj_opinion = o
             max_count = c  
-    return maj_opinion 
+    return maj_opinion
 
 class Simulation:
-    def __init__(self, N=15, avg_degree=5, p=0.5, phi=0.5, num_opinions=3, initial_graph=generate_random_regular_graph):
+    def __init__(self, N=15, avg_degree=5, p=0.5, phi=0.5, num_opinions=3, initial_graph=generate_random_regular_graph, run=0):
         self.N = N
         self.k = avg_degree
         self.p = p
@@ -233,7 +236,7 @@ class Simulation:
     def run(self):
         if self.status:
             return self.status
-        while(not (self.convergence_condition() )):
+        while(not (self.convergence_condition() or self.halt_condition())):
 
             self.step()
             self.step()
@@ -260,4 +263,10 @@ class Simulation:
             self.init_opinions()
             self.run()
             i+=1
-        return self.status
+        return self
+
+@cached_function(cache_dir='cache', cache_filename='Simulation.joblib')
+def run_sim(*args, **kwargs):
+    s = Simulation(*args, **kwargs).run_retry()
+    return s
+
