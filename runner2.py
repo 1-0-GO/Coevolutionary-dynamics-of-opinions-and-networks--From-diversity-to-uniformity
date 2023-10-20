@@ -52,5 +52,5 @@ def contour_plot_number_of_surviving_opinions(N=100, runs=50, avg_degree=10, num
     plt.show()
 
 
-contour_plot_number_of_surviving_opinions(N=1000, avg_degree=10, p_count=160, phi_count=160, num_opinions=50, runs=20)
+contour_plot_number_of_surviving_opinions(N=1000, avg_degree=10, p_count=20, phi_count=20, num_opinions=50, runs=5)
 #plot_phi_vs_final_number_of_opinions(N=1000, p=0.6, phi_count=50, runs=10, avg_degree=10, num_opinions=50)

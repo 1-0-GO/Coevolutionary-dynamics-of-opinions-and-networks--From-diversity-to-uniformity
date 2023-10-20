@@ -49,7 +49,10 @@ def cached_function(cache_dir, cache_filename):
             # Save the result to the cache
             #joblib.dump(result, cache_path)  # or pickle.dump(result, open(cache_path, 'wb'))
             # Save the result with the arguments to the cache
-            joblib.dump(result, os.path.expanduser("~/remote_cache/Coevolutionary-dynamics-of-opinions-and-networks--From-diversity-to-uniformity/"+ cache_file))  # or pickle.dump(result, open(cache_path, 'wb'))
+            rem = "~/remote_cache/Coevolutionary-dynamics-of-opinions-and-networks--From-diversity-to-uniformity/"
+            if  os.path.exists(os.path.expanduser(rem)):
+                cache_file  = rem + cache_file
+            joblib.dump(result, os.path.expanduser( cache_file))  # or pickle.dump(result, open(cache_path, 'wb'))
             print("saved to cache")
 
             return result
